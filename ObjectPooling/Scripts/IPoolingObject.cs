@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace HGPlugins.ObjectPooling
+namespace GRootPlugins.ObjectPooling
 {
     public interface IPoolingObject
     {
