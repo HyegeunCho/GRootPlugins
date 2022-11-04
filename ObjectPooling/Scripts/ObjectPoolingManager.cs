@@ -5,7 +5,7 @@ using System.Linq;
 using HGPlugins.Singleton;
 using UnityEngine;
 
-namespace HGPlugins.ObjectPooling
+namespace GRootPlugins.ObjectPooling
 {
     public sealed class ObjectPoolingManager : MonoSingleton<ObjectPoolingManager>
     {
