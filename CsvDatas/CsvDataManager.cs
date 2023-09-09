@@ -56,7 +56,8 @@ namespace GRootPlugins.CsvDatas
                         }
                         else
                         {
-                            var values = line.Split(',').ToList();
+                            //var values = line.Split(',').ToList();
+                            var values = CustomSplit(line);
                             BaseCsvModel obj = Activator.CreateInstance(inType) as BaseCsvModel;
                             if (obj == null) continue;
                             
@@ -72,6 +73,47 @@ namespace GRootPlugins.CsvDatas
             return data;
         }
 
+        private List<string> CustomSplit(string inValue)
+        {
+            List<string> result = new List<string>();
+
+            var buffer = inValue.Split(',');
+
+            bool isNested = false;
+            string aggregateBuffer = string.Empty;
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                var curBuffer = buffer[i];
+                if (!isNested)
+                {
+                    if (!curBuffer.Contains('\"'))
+                    {
+                        result.Add(curBuffer);
+                        continue;    
+                    }
+                    
+                    isNested = true;
+                    curBuffer = curBuffer.Remove(curBuffer.IndexOf('\"'), 1);
+                    aggregateBuffer = aggregateBuffer == string.Empty ? curBuffer : $"{aggregateBuffer},{curBuffer}";
+                    continue;
+                }
+
+                if (curBuffer.Contains('\"'))
+                {
+                    isNested = false;
+                    curBuffer = curBuffer.Remove(curBuffer.IndexOf('\"'), 1);
+                    aggregateBuffer = aggregateBuffer == string.Empty ? curBuffer : $"{aggregateBuffer},{curBuffer}";
+                    result.Add(aggregateBuffer);
+                    aggregateBuffer = string.Empty;
+                    continue;
+                }
+                
+                aggregateBuffer = aggregateBuffer == string.Empty ? curBuffer : $"{aggregateBuffer},{curBuffer}";
+            }
+
+            return result;
+        }
+        
         public T GetData<T>(int inID) where T : BaseCsvModel
         {
             Type type = typeof(T);
@@ -96,6 +138,18 @@ namespace GRootPlugins.CsvDatas
             return result as T;
         }
 
-    }
+        public void ForEach<T>(Action<T> inDelegate) where T : BaseCsvModel
+        {
+            Type type = typeof(T);
+            if (!_csvDatas.ContainsKey(type)) return;
+            if (_csvDatas[type] == null || _csvDatas[type].Count == 0) return;
 
+            foreach (var baseCsvModel in _csvDatas[type].Values)
+            {
+                var value = (T)baseCsvModel;
+                if (value == null) continue;
+                inDelegate.Invoke(value);
+            }
+        }
+    }
 }
